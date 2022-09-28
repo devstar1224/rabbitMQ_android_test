@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun listenMessageMQ() {
         thread {
-            channel!!.exchangeDeclare(topic, "fanout", true)
+            channel!!.exchangeDeclare(topic, "fanout", false, false, null)
             var queue = channel!!.queueDeclare().queue
             println(" [*] Waiting for messages. To exit press CTRL+C")
 
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.res).text = message
             }
             channel!!.basicConsume(
-                queue, true, deliverCallback
+                queue, false, deliverCallback
             ) { consumerTag: String? -> }
         }
     }
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                 factory.newConnection().use { connection ->
                     connection.createChannel().use { channel ->
-                            channel.exchangeDeclare(topic, "fanout", true)
+                            channel.exchangeDeclare(topic, "fanout", false, false, null)
                             channel.basicPublish(topic, "", null, message.toByteArray())
                             println(" [x] Set '$message'")
                     }
