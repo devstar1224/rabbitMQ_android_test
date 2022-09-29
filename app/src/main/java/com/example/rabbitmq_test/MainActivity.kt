@@ -13,9 +13,8 @@ import java.nio.charset.Charset
 import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
 
-
-class MainActivity : AppCompatActivity() {
-    private var topic = ""
+class MainActivity : AppCompatActivity(){
+    private var topic = "hello"
     private var thread: Thread? = null
     private val factory = ConnectionFactory()
     private var connection: Connection? = null
@@ -29,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         initRabbitMQConn()
 
         findViewById<Button>(R.id.resBt).setOnClickListener {
-            topic = findViewById<EditText>(R.id.topic).text.toString()
+            topic = findViewById<EditText>(R.id.exchange).text.toString()
             listenMessageMQ();
         }
 
@@ -52,9 +51,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun listenMessageMQ() {
         thread {
-            channel!!.exchangeDeclare(topic, "fanout", true, true, null)
-            var queue = channel!!.queueDeclare().queue
-            channel!!.queueBind(queue, topic, "")
+            channel!!.exchangeDeclare(topic, "fanout", false, false, null)
+            var queue = channel!!.queueDeclare(findViewById<EditText>(R.id.queuename).text.toString(), true, false, false, null).queue
+            println(" [*] Waiting for messages. To exit press CTRL+C")
+
+            channel!!.queueBind(findViewById<EditText>(R.id.queuename).text.toString(), topic, "")
             val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
                 val message = String(delivery.body, Charset.defaultCharset())
                 println(" 수신데이터::::: '$message'")
@@ -70,12 +71,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
     private fun sendMessageMQ(message: String) {
         thread = thread {
             try {
                 factory.newConnection().use { connection ->
                     connection.createChannel().use { channel ->
-                        channel.exchangeDeclare(topic, "fanout", true, true, null)
+                        channel.exchangeDeclare(topic, "fanout", false, false, null)
                         channel.basicPublish(topic, "", null, message.toByteArray())
                         println(" [x] Set '$message'")
                     }

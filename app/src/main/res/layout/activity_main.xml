@@ -6,26 +6,39 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/res"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="NO DATA"
+    <ScrollView
+        android:layout_width="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/message" />
+        app:layout_constraintTop_toBottomOf="@id/sendBt"
+        android:layout_height="0dp">
+        <TextView
+            android:id="@+id/res"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NO DATA"
+        />
+    </ScrollView>
+
 
     <EditText
-        android:id="@+id/topic"
+        android:id="@+id/exchange"
         app:layout_constraintTop_toTopOf="parent"
         android:hint="Exchange Name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         />
+    <EditText
+        android:id="@+id/queuename"
+        app:layout_constraintTop_toBottomOf="@id/exchange"
+        android:hint="Queue Name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
     <Button
         android:id="@+id/resBt"
-        app:layout_constraintTop_toBottomOf="@id/topic"
+        app:layout_constraintTop_toBottomOf="@id/queuename"
         android:text="Bind"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
