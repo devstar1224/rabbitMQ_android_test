@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity(){
     private val factory = ConnectionFactory()
     private var connection: Connection? = null
     private var channel: Channel? = null
+    private var lastDelivery: Delivery? = null
 
     var handler = ValueHandler()
 
@@ -34,6 +35,14 @@ class MainActivity : AppCompatActivity(){
 
         findViewById<Button>(R.id.sendBt).setOnClickListener {
             sendMessageMQ(findViewById<EditText>(R.id.message).text.toString())
+        }
+
+        findViewById<Button>(R.id.allAck).setOnClickListener {
+            if (lastDelivery != null) {
+                thread {
+                    channel?.basicAck(lastDelivery!!.getEnvelope().getDeliveryTag(), true)
+                }
+            }
         }
     }
 
@@ -64,6 +73,7 @@ class MainActivity : AppCompatActivity(){
                 bundle.putString("message", message)
                 msg.data = bundle
                 handler.sendMessage(msg)
+                lastDelivery = delivery
             }
             channel!!.basicConsume(
                 queue, false, deliverCallback
@@ -98,7 +108,7 @@ class MainActivity : AppCompatActivity(){
             super.handleMessage(msg)
             val bundle: Bundle = msg.data
             val value = bundle.getString("message")
-            findViewById<TextView>(R.id.res).text = value
+            findViewById<TextView>(R.id.res).text = "${findViewById<TextView>(R.id.res).text}\n$value"
         }
     }
 }
