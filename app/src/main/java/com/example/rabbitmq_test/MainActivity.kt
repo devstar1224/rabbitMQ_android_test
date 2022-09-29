@@ -1,6 +1,8 @@
 package com.example.rabbitmq_test
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -13,12 +15,13 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-
-    private var topic = "hello"
+    private var topic = ""
     private var thread: Thread? = null
     private val factory = ConnectionFactory()
     private var connection: Connection? = null
     private var channel: Channel? = null
+
+    var handler = ValueHandler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,15 +52,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun listenMessageMQ() {
         thread {
-            channel!!.exchangeDeclare(topic, "fanout", false, false, null)
+            channel!!.exchangeDeclare(topic, "fanout", true, true, null)
             var queue = channel!!.queueDeclare().queue
-            println(" [*] Waiting for messages. To exit press CTRL+C")
-
             channel!!.queueBind(queue, topic, "")
             val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
                 val message = String(delivery.body, Charset.defaultCharset())
-                println(" [x] Received '$message'")
-                findViewById<TextView>(R.id.res).text = message
+                println(" 수신데이터::::: '$message'")
+                val msg = handler.obtainMessage()
+                val bundle = Bundle()
+                bundle.putString("message", message)
+                msg.data = bundle
+                handler.sendMessage(msg)
             }
             channel!!.basicConsume(
                 queue, false, deliverCallback
@@ -67,12 +72,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendMessageMQ(message: String) {
         thread = thread {
-                try {
+            try {
                 factory.newConnection().use { connection ->
                     connection.createChannel().use { channel ->
-                            channel.exchangeDeclare(topic, "fanout", false, false, null)
-                            channel.basicPublish(topic, "", null, message.toByteArray())
-                            println(" [x] Set '$message'")
+                        channel.exchangeDeclare(topic, "fanout", true, true, null)
+                        channel.basicPublish(topic, "", null, message.toByteArray())
+                        println(" [x] Set '$message'")
                     }
                 }
             } catch (e: TimeoutException) {
@@ -82,6 +87,15 @@ class MainActivity : AppCompatActivity() {
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    inner class ValueHandler : Handler() {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            val bundle: Bundle = msg.data
+            val value = bundle.getString("message")
+            findViewById<TextView>(R.id.res).text = value
         }
     }
 }
